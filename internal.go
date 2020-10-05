@@ -13,22 +13,6 @@ type extendedLogger interface {
 	Traceln(args ...interface{})
 }
 
-type logger struct {
-	log extendedLogger
-}
-
-var globalLogger *logger
-
-func init() {
-	iLog := logrus.StandardLogger()
-	iLog.SetFormatter(&textFormatter{})
-	globalLogger = &logger{log: iLog}
-}
-
-func log() Logger {
-	return globalLogger
-}
-
 // Trace logs a message at level Trace.
 func (l *logger) Trace(args ...interface{}) {
 	l.log.Trace(args...)

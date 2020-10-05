@@ -1,5 +1,9 @@
 package log
 
+import (
+	"github.com/sirupsen/logrus"
+)
+
 // Logger defines a logger
 type Logger interface {
 	Trace(args ...interface{})
@@ -37,6 +41,57 @@ type Logger interface {
 
 // Fields type, used to pass to `WithFields`.
 type Fields map[string]interface{}
+
+// Level type.
+type Level logrus.Level
+
+// These are the different logging levels.
+const (
+	// PanicLevel level, highest level of severity. Logs and then calls panic with the
+	// message passed to Debug, Info, ...
+	PanicLevel Level = Level(logrus.PanicLevel)
+	// FatalLevel level. Logs and then calls `os.Exit(1)`. It will exit even if the
+	// logging level is set to Panic.
+	FatalLevel = Level(logrus.FatalLevel)
+	// ErrorLevel level. Logs. Used for errors that should definitely be noted.
+	// Commonly used for hooks to send errors to an error tracking service.
+	ErrorLevel = Level(logrus.ErrorLevel)
+	// WarnLevel level. Non-critical entries that deserve eyes.
+	WarnLevel = Level(logrus.WarnLevel)
+	// InfoLevel level. General operational entries about what's going on inside the
+	// application.
+	InfoLevel = Level(logrus.InfoLevel)
+	// DebugLevel level. Usually only enabled when debugging. Very verbose logging.
+	DebugLevel = Level(logrus.DebugLevel)
+	// TraceLevel level. Designates finer-grained informational events than the Debug.
+	TraceLevel = Level(logrus.TraceLevel)
+)
+
+type logger struct {
+	log extendedLogger
+}
+
+var globalLogger *logger
+
+func init() {
+	globalLogger = &logger{log: createLogger()}
+}
+
+// Init initializes the logger.
+func Init(opts ...Option) {
+	log := createLogger()
+	for _, opt := range opts {
+		opt.apply(log)
+	}
+
+	globalLogger = &logger{log: log}
+}
+
+func createLogger() *logrus.Logger {
+	log := logrus.StandardLogger()
+	log.SetFormatter(&textFormatter{})
+	return log
+}
 
 // Trace logs a message at level Trace.
 func Trace(args ...interface{}) {
@@ -165,4 +220,8 @@ func WithField(key string, value interface{}) Logger {
 // or Panic on the Entry it returns.
 func WithFields(fields Fields) Logger {
 	return log().WithFields(fields)
+}
+
+func log() Logger {
+	return globalLogger
 }

@@ -4,7 +4,6 @@ import (
 	"errors"
 
 	log "github.com/nickylogan/go-log"
-	"github.com/sirupsen/logrus"
 )
 
 func main() {
@@ -12,7 +11,7 @@ func main() {
 		_ = recover()
 	}()
 
-	logrus.SetLevel(logrus.TraceLevel)
+	log.Init(log.WithLevel(log.TraceLevel))
 	log.WithError(errors.New("trace error")).
 		WithFields(log.Fields{"field": "trace"}).
 		Trace("trace message")

@@ -33,8 +33,9 @@ var (
 )
 
 const (
-	maxCallerDepth   int = 25
-	knownGologFrames int = 9
+	maxCallerDepth   int    = 25
+	knownGologFrames int    = 9
+	logrusPackage    string = "github.com/sirupsen/logrus"
 )
 
 type textFormatter struct {
@@ -237,7 +238,7 @@ func getCallerFrame() *runtime.Frame {
 		pkg := getPackageName(f.Function)
 
 		// If the caller isn't part of this package, we're done
-		if pkg != gologPackage {
+		if pkg != gologPackage && pkg != logrusPackage {
 			return &f //nolint:scopelint
 		}
 	}

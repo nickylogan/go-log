@@ -99,24 +99,23 @@ func (f *textFormatter) writeFormatted(b *bytes.Buffer, entry *logrus.Entry, sou
 
 func (f *textFormatter) writePlain(b *bytes.Buffer, entry *logrus.Entry, sourceLine, funcName string) {
 	f.writeKeyValue(b, "time", entry.Time.Format(defaultTimestampFormat))
-	b.WriteByte(' ')
 	f.writeKeyValue(b, "level", entry.Level.String())
 	if entry.Message != "" {
-		b.WriteByte(' ')
 		f.writeKeyValue(b, "msg", entry.Message)
 	}
 	if sourceLine != defaultSourceLine {
-		b.WriteByte(' ')
 		f.writeKeyValue(b, "sourceLine", sourceLine)
 	}
 
 	for k, v := range entry.Data {
-		b.WriteByte(' ')
 		f.writeKeyValue(b, k, v)
 	}
 }
 
 func (f *textFormatter) writeKeyValue(b *bytes.Buffer, key string, value interface{}) {
+	if b.Len() > 0 {
+		b.WriteByte(' ')
+	}
 	b.WriteString(key)
 	b.WriteByte('=')
 	f.writeValue(b, value)
@@ -151,8 +150,7 @@ func (f *textFormatter) shouldQuote(text string) bool {
 		if !(('a' <= ch && ch <= 'z') ||
 			('A' <= ch && ch <= 'Z') ||
 			('0' <= ch && ch <= '9') ||
-			ch == '.' ||
-			ch == '-') {
+			ch == '-' || ch == '.' || ch == '_' || ch == '/' || ch == '@' || ch == '^' || ch == '+') {
 			return true
 		}
 	}

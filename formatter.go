@@ -34,7 +34,7 @@ var (
 
 const (
 	maxCallerDepth   int    = 25
-	knownGologFrames int    = 9
+	knownGologFrames int    = 8
 	logrusPackage    string = "github.com/sirupsen/logrus"
 )
 

@@ -6,10 +6,15 @@ import (
 )
 
 func main() {
+	defer func() {
+		_ = recover()
+	}()
+
 	logrus.SetLevel(logrus.TraceLevel)
 	log.Trace("trace message")
 	log.Debug("debug message")
 	log.Info("info message")
 	log.Warn("warn message")
 	log.Error("error message")
+	log.Panic("panic message")
 }

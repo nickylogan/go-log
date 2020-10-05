@@ -34,7 +34,7 @@ var (
 
 const (
 	maxCallerDepth   int    = 25
-	knownGologFrames int    = 8
+	knownGologFrames int    = 9
 	logrusPackage    string = "github.com/sirupsen/logrus"
 )
 
@@ -196,10 +196,10 @@ func getCaller() (sourceLine, funcName string) {
 	}
 	sourceLine = frame.File + ":" + strconv.Itoa(frame.Line)
 
-	if frame.Func == nil {
+	if frame.Function == "" {
 		funcName = defaultFunc
 	} else {
-		funcName = frame.Func.Name()
+		funcName = frame.Function
 		idx := strings.LastIndex(funcName, ".")
 		funcName = funcName[idx+1:] + "()"
 	}

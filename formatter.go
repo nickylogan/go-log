@@ -90,7 +90,7 @@ func (f *textFormatter) writeFormatted(b *bytes.Buffer, entry *logrus.Entry, sou
 	funcName = aurora.Colorize(funcName, scheme.funcName).String()
 
 	// print prefix
-	fmt.Fprintf(b, "%s %s %s %s: %s", timestamp, sourceLine, levelText, funcName, entry.Message)
+	fmt.Fprintf(b, "%s %s %s %s: %s", timestamp, levelText, sourceLine, funcName, entry.Message)
 
 	for k, v := range entry.Data {
 		k := aurora.Colorize(k, levelColor)

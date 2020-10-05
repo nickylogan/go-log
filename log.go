@@ -2,7 +2,6 @@ package log
 
 import (
 	"github.com/sirupsen/logrus"
-	prefixed "github.com/x-cray/logrus-prefixed-formatter"
 )
 
 // Logger defines a logger
@@ -13,48 +12,48 @@ type Logger interface {
 	Tracef(format string, args ...interface{})
 	// Traceln logs a message at level Trace.
 	Traceln(args ...interface{})
+
 	// Debug logs a message at level Debug.
 	Debug(args ...interface{})
 	// Debugf logs a message at level Debug.
 	Debugf(format string, args ...interface{})
 	// Debugln logs a message at level Debug.
 	Debugln(args ...interface{})
+
 	// Info logs a message at level Info.
 	Info(args ...interface{})
 	// Infof logs a message at level Info.
 	Infof(format string, args ...interface{})
 	// Infoln logs a message at level Info.
 	Infoln(args ...interface{})
+
 	// Warn logs a message at level Warn.
 	Warn(args ...interface{})
 	// Warnf logs a message at level Warn.
 	Warnf(format string, args ...interface{})
 	// Warnln logs a message at level Warn.
 	Warnln(args ...interface{})
+
 	// Error logs a message at level Error.
 	Error(args ...interface{})
 	// Errorf logs a message at level Error.
 	Errorf(format string, args ...interface{})
 	// Errorln logs a message at level Error.
 	Errorln(args ...interface{})
+
 	// Fatal logs a message at level Fatal.log.
 	Fatal(args ...interface{})
 	// Fatalf logs a message at level Fatal.log.
 	Fatalf(format string, args ...interface{})
 	// Fatalln logs a message at level atal.log.
 	Fatalln(args ...interface{})
+
 	// Panic logs a message at level Panic.
 	Panic(args ...interface{})
 	// Panicf logs a message at level Panic.
 	Panicf(format string, args ...interface{})
 	// Panicln logs a message at level Panic.
 	Panicln(args ...interface{})
-}
-
-func init() {
-	logrus.SetFormatter(&prefixed.TextFormatter{
-		FullTimestamp: true,
-	})
 }
 
 // Trace logs a message at level Trace.
@@ -166,11 +165,16 @@ type logger struct {
 	log Logger
 }
 
+var globalLogger *logger
+
+func init() {
+	iLog := logrus.StandardLogger()
+	iLog.SetFormatter(&textFormatter{})
+	globalLogger = &logger{log: iLog}
+}
+
 func log() Logger {
-	_, f := getCaller()
-	return &logger{
-		log: logrus.WithFields(logrus.Fields{"prefix": f}),
-	}
+	return globalLogger
 }
 
 // Trace logs a message at level Trace.

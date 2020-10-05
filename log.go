@@ -1,11 +1,5 @@
 package log
 
-import (
-	"context"
-
-	"github.com/sirupsen/logrus"
-)
-
 // Logger defines a logger
 type Logger interface {
 	Trace(args ...interface{})
@@ -46,7 +40,6 @@ type Fields map[string]interface{}
 
 // Trace logs a message at level Trace.
 func Trace(args ...interface{}) {
-	logrus.WithContext(context.Background())
 	log().Trace(args...)
 }
 

@@ -21,6 +21,22 @@ const (
 	defaultTimestampFormat = time.RFC3339
 )
 
+var (
+	// qualified package name, cached at first use
+	gologPackage string
+
+	// Positions in the call stack when tracing to report the calling method
+	minCallerDepth int
+
+	// Used for caller information initialisation
+	callerInitOnce sync.Once
+)
+
+const (
+	maxCallerDepth   int = 25
+	knownGologFrames int = 9
+)
+
 type textFormatter struct {
 	tty bool
 	sync.Once
@@ -175,20 +191,73 @@ func getLevelText(level logrus.Level) string {
 }
 
 func getCaller() (sourceLine, funcName string) {
-	pc, file, line, ok := runtime.Caller(9)
-	if !ok {
+	frame := getCallerFrame()
+	if frame == nil {
 		return defaultSourceLine, defaultFunc
 	}
-	sourceLine = file + ":" + strconv.Itoa(line)
+	sourceLine = frame.File + ":" + strconv.Itoa(frame.Line)
 
-	funcInfo := runtime.FuncForPC(pc)
-	if funcInfo == nil {
+	if frame.Func == nil {
 		funcName = defaultFunc
 	} else {
-		funcName = funcInfo.Name()
+		funcName = frame.Func.Name()
 		idx := strings.LastIndex(funcName, ".")
 		funcName = funcName[idx+1:] + "()"
 	}
 
 	return sourceLine, funcName
+}
+
+// This implementation is blatantly ripped-off from logrus. We can't use their
+// ReportCaller flag because of us using different stack frames.
+//
+// Refer to https://github.com/sirupsen/logrus/blob/master/entry.go#L173.
+func getCallerFrame() *runtime.Frame {
+	// cache this package's fully-qualified name
+	callerInitOnce.Do(func() {
+		pcs := make([]uintptr, maxCallerDepth)
+		_ = runtime.Callers(0, pcs)
+
+		// dynamic get the package name and the minimum caller depth
+		for i := 0; i < maxCallerDepth; i++ {
+			funcName := runtime.FuncForPC(pcs[i]).Name()
+			if strings.Contains(funcName, "getCallerFrame") {
+				gologPackage = getPackageName(funcName)
+				break
+			}
+		}
+
+		minCallerDepth = knownGologFrames
+	})
+
+	// Restrict the lookback frames to avoid runaway lookups
+	pcs := make([]uintptr, maxCallerDepth)
+	depth := runtime.Callers(minCallerDepth, pcs)
+	frames := runtime.CallersFrames(pcs[:depth])
+
+	for f, again := frames.Next(); again; f, again = frames.Next() {
+		pkg := getPackageName(f.Function)
+
+		// If the caller isn't part of this package, we're done
+		if pkg != gologPackage {
+			return &f //nolint:scopelint
+		}
+	}
+
+	// if we got here, we failed to find the caller's context
+	return nil
+}
+
+func getPackageName(f string) string {
+	for {
+		lastPeriod := strings.LastIndex(f, ".")
+		lastSlash := strings.LastIndex(f, "/")
+		if lastPeriod > lastSlash {
+			f = f[:lastPeriod]
+		} else {
+			break
+		}
+	}
+
+	return f
 }
